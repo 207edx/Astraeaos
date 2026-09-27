@@ -1,0 +1,23 @@
+{
+  "name": "astraeaos",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AstraeaOS \u2014 personal JEE-prep productivity system. Static frontend + Vercel Edge Functions backend (Groq AI + web search), Firebase Auth/Firestore for data.",
+  "scripts": {
+    "dev": "vite",
+    "deploy": "vercel --prod",
+    "rules:deploy": "firebase deploy --only firestore:rules",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "jose": "^5.9.6"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
+}

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- [ACCESSIBILITY FIX] maximum-scale=1 blocked pinch-to-zoom (WCAG 1.4.4). -->
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<title>Astraea OS — Your Study Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="0.png">
+<link rel="icon" type="image/png" sizes="16x16" href="0.png">
+<link rel="apple-touch-icon" href="0.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f6ef7">
+    
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#010205;color:#f0f4ff;overflow-x:hidden;}
+.grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(79,110,247,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,110,247,0.03) 1px,transparent 1px);background-size:60px 60px;}
+.blob{position:fixed;border-radius:50%;pointer-events:none;filter:blur(100px);z-index:0;}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(1,2,5,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(79,110,247,0.15);}
+.nav-brand{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:0.15em;background:linear-gradient(135deg,#fff 30%,#4f6ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nlink{color:rgba(255,255,255,0.55);text-decoration:none;font-size:0.85rem;font-weight:700;letter-spacing:0.05em;transition:all 0.2s;text-transform:uppercase;}
+.nlink:hover{color:#fff;text-shadow:0 0 12px rgba(255,255,255,0.4);}
+.nav-btns{display:flex;gap:12px;}
+.nbtn{padding:10px 24px;border-radius:99px;font-size:0.82rem;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;letter-spacing:0.04em;}
+.nbtn.out{background:transparent;border:1px solid rgba(79,110,247,0.35);color:rgba(255,255,255,0.65);}
+.nbtn.out:hover{background:rgba(79,110,247,0.1);color:#fff;border-color:rgba(79,110,247,0.6);}
+.nbtn.pri{background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;box-shadow:0 4px 20px rgba(79,110,247,0.35);}
+.nbtn.pri:hover{box-shadow:0 6px 28px rgba(79,110,247,0.55);transform:translateY(-1px);}
+
+/* HERO */
+.hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 60px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:99px;background:rgba(79,110,247,0.08);border:1px solid rgba(79,110,247,0.3);font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(79,110,247,0.9);margin-bottom:32px;}
+.bdot{width:6px;height:6px;border-radius:50%;background:#4f6ef7;box-shadow:0 0 10px #4f6ef7;animation:bpulse 2s infinite;}
+@keyframes bpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.5);opacity:0.5;}}
+.hero-h1{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,7vw,5.2rem);font-weight:800;line-height:1.06;letter-spacing:-0.02em;margin-bottom:22px;}
+.hero-h1 span{background:linear-gradient(135deg,#fff 20%,#4f6ef7 60%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:clamp(0.95rem,2vw,1.12rem);color:rgba(255,255,255,0.45);max-width:540px;line-height:1.75;margin-bottom:38px;}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:52px;}
+.btn-main{padding:16px 36px;border-radius:99px;background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;font-size:0.98rem;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 28px rgba(79,110,247,0.38);transition:all 0.2s;letter-spacing:0.04em;}
+.btn-main:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(79,110,247,0.55);}
+.btn-ghost{padding:16px 36px;border-radius:99px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:0.98rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;letter-spacing:0.04em;}
+.btn-ghost:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.35);}
+.hero-stats{display:flex;gap:44px;flex-wrap:wrap;justify-content:center;}
+.hstat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;background:linear-gradient(135deg,#fff,#4f6ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hstat-lbl{font-size:0.68rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+
+/* SHOWCASE */
+.sec{position:relative;z-index:1;padding:70px 24px;}
+.sec-lbl{text-align:center;font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.18em;color:rgba(79,110,247,0.7);margin-bottom:12px;}
+.sec-h2{text-align:center;font-family:'Syne',sans-serif;font-size:clamp(1.7rem,3.5vw,2.6rem);font-weight:800;letter-spacing:-0.01em;margin-bottom:12px;}
+.sec-sub{text-align:center;font-size:0.9rem;color:rgba(255,255,255,0.38);max-width:480px;margin:0 auto 52px;line-height:1.7;}
+.showcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1080px;margin:0 auto;}
+.ss-card{background:rgba(6,10,24,0.85);border:1px solid rgba(79,110,247,0.15);border-radius:32px;overflow:hidden;transition:all 0.3s;backdrop-filter:blur(12px);}
+.ss-card:hover{border-color:rgba(79,110,247,0.35);box-shadow:0 16px 48px rgba(0,0,0,0.6);transform:translateY(-4px);}
+.ss-hdr{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:8px;}
+.ss-dots{display:flex;gap:5px;}
+.ss-dot{width:9px;height:9px;border-radius:50%;}
+.ss-lbl{font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:0.12em;text-transform:uppercase;margin-left:auto;}
+.ss-body{padding:22px;}
+.mclock{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin:6px 0;}
+.mstat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+.mstat{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:12px 8px;text-align:center;}
+.mstat-lbl{font-size:0.48rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.28);margin-bottom:3px;}
+.mstat-val{font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:700;}
+.mdpp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;}
+.mdpp-box{background:rgba(255,255,255,0.02);border-radius:16px;padding:12px;text-align:center;border:1px solid rgba(255,255,255,0.04);}
+.mdpp-lbl{font-size:0.48rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;}
+.mdpp-val{font-size:1.2rem;font-weight:800;}
+.mlog-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.mlog-name{flex:1;font-size:0.76rem;font-weight:600;}
+.mbadge{padding:3px 9px;border-radius:99px;font-size:0.55rem;font-weight:700;text-transform:uppercase;}
+.mlog-dur{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.38);}
+.mtask{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.mcircle{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;}
+.mtask-name{font-size:0.8rem;font-weight:600;flex:1;}
+.mtask-sub{font-size:0.6rem;color:rgba(255,255,255,0.3);}
+.mbars{display:flex;align-items:flex-end;gap:6px;height:65px;margin-top:14px;}
+.mbar{flex:1;border-radius:6px 6px 0 0;}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;max-width:1100px;margin:0 auto;}
+.feat{background:rgba(6,10,24,0.6);border:1px solid rgba(79,110,247,0.12);border-radius:32px;padding:32px;transition:all 0.25s;position:relative;overflow:hidden;backdrop-filter:blur(10px);}
+.feat:hover{border-color:rgba(79,110,247,0.35);transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.5);}
+.feat-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:18px;}
+.feat-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:7px;}
+.feat-desc{font-size:0.82rem;color:rgba(255,255,255,0.42);line-height:1.7;}
+.feat-pill{display:inline-block;margin-top:16px;padding:4px 14px;border-radius:99px;font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+
+/* TRIAL */
+.trial-sec{position:relative;z-index:1;padding:70px 24px;text-align:center;}
+.trial-card{max-width:520px;margin:0 auto;background:rgba(79,110,247,0.06);border:1px solid rgba(79,110,247,0.2);border-radius:32px;padding:40px 36px;}
+.t-ring{width:110px;height:110px;margin:0 auto 22px;position:relative;}
+.t-time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;}
+.trial-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:9px;}
+.trial-desc{font-size:0.85rem;color:rgba(255,255,255,0.42);line-height:1.7;margin-bottom:26px;}
+
+/* AUTH MODAL & RESTRICTED ACCESS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.overlay.show{opacity:1;pointer-events:all;}
+.mcard{background:rgba(6,10,24,0.98);border:1px solid rgba(79,110,247,0.25);border-radius:36px;padding:44px;width:100%;max-width:420px;box-shadow:0 40px 100px rgba(0,0,0,0.9);transform:translateY(20px) scale(0.97);transition:all 0.25s;position:relative;}
+.overlay.show .mcard{transform:translateY(0) scale(1);}
+.mclose{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.05);border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.mclose:hover{background:rgba(255,255,255,0.15);color:#fff;}
+.brand{text-align:center;margin-bottom:32px;}
+.brand-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
+.borbit{width:38px;height:38px;border-radius:50%;border:2px solid rgba(79,110,247,0.5);display:flex;align-items:center;justify-content:center;position:relative;animation:spin8 8s linear infinite;}
+@keyframes spin8{to{transform:rotate(360deg)}}
+.borbit::before{content:'';position:absolute;width:7px;height:7px;border-radius:50%;background:#4f6ef7;top:-4px;left:50%;transform:translateX(-50%);box-shadow:0 0 10px #4f6ef7;}
+.borbit-in{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#4f6ef7,#7c3aed);}
+.brand-name{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;letter-spacing:0.15em;background:linear-gradient(135deg,#fff 30%,#4f6ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.brand-ver{font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:0.3em;text-transform:uppercase;font-weight:700;}
+
+/* TABS */
+.atabs{display:flex;background:rgba(0,0,0,0.35);border-radius:16px;padding:4px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.05);}
+.atab{flex:1;padding:10px;text-align:center;border-radius:12px;cursor:pointer;font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.3);transition:all 0.2s;letter-spacing:0.05em;}
+.atab.active{background:rgba(79,110,247,0.25);color:#fff;border:1px solid rgba(79,110,247,0.3);}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.4);margin-bottom:8px;}
+.field input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:16px;color:#f0f4ff;font-size:0.9rem;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:all 0.2s;}
+.field input:focus{border-color:rgba(79,110,247,0.6);background:rgba(79,110,247,0.06);box-shadow:0 0 0 4px rgba(79,110,247,0.15);}
+.field input::placeholder{color:rgba(255,255,255,0.15);}
+.btn-pri{width:100%;padding:14px;border-radius:99px;border:none;background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 6px 24px rgba(79,110,247,0.3);margin-bottom:14px;letter-spacing:0.04em;}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(79,110,247,0.5);}
+.btn-pri:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+.btn-goog{width:100%;padding:14px;border-radius:99px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#f0f4ff;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:14px;}
+.btn-goog:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.3);}
+.divider{display:flex;align-items:center;gap:12px;margin:0 0 14px;color:rgba(255,255,255,0.2);font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
+
+.msg{padding:10px 14px;border-radius:12px;font-size:0.8rem;font-weight:600;margin-bottom:14px;display:none;}
+.msg.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;}
+.msg.success{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);color:#6ee7b7;}
+.msg.show{display:flex;align-items:flex-start;gap:8px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;flex-shrink:0;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.alink{font-size:0.75rem;color:rgba(79,110,247,0.9);cursor:pointer;font-weight:700;text-align:center;display:block;margin-top:8px;transition:color 0.2s;}
+.alink:hover{color:#a78bfa;}
+
+/* TRIAL EXPIRED */
+.t-expired{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);backdrop-filter:blur(18px);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;}
+.t-expired.show{display:flex;}
+.te-icon{font-size:3.8rem;margin-bottom:18px;}
+.te-title{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;margin-bottom:10px;}
+.te-sub{font-size:0.9rem;color:rgba(255,255,255,0.45);max-width:380px;line-height:1.75;margin-bottom:28px;}
+.te-btn{padding:15px 38px;border-radius:99px;background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;font-size:0.96rem;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 8px 28px rgba(79,110,247,0.38);margin-bottom:10px;}
+.te-skip{font-size:0.78rem;color:rgba(255,255,255,0.28);cursor:pointer;margin-top:6px;}
+.te-skip:hover{color:rgba(255,255,255,0.55);}
+
+/* FOOTER */
+.footer{position:relative;z-index:1;text-align:center;padding:36px 24px;border-top:1px solid rgba(79,110,247,0.08);font-size:0.7rem;color:rgba(255,255,255,0.18);letter-spacing:0.1em;}
+.footer span{color:rgba(79,110,247,0.5);}
+
+/* CREDITS */
+.credits-sec{position:relative;z-index:1;padding:80px 24px 60px;}
+.section-header{text-align:center;font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.22em;color:rgba(79,110,247,0.7);margin-bottom:10px;}
+.hero-clock{font-family:'Syne',sans-serif;font-size:2.6rem;font-weight:800;text-align:center;background:linear-gradient(135deg,#fff 20%,#4f6ef7 60%,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;letter-spacing:0.12em;}
+.credits-subtitle{text-align:center;font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:#fff;margin:32px 0 18px;text-shadow:0 2px 10px rgba(0,0,0,0.8);}
+.credits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;max-width:980px;margin:0 auto;}
+.credit-card{background:rgba(6,10,24,0.85);border:1px solid rgba(79,110,247,0.14);border-radius:32px;padding:24px 18px;text-align:center;transition:all 0.22s;display:flex;flex-direction:column;align-items:center;gap:10px;backdrop-filter:blur(10px);}
+.credit-card:hover{border-color:rgba(79,110,247,0.38);transform:translateY(-4px);box-shadow:0 16px 48px rgba(79,110,247,0.15);}
+.credit-avatar{width:72px;height:72px;border-radius:50%;border:2px solid rgba(79,110,247,0.35);object-fit:cover;}
+.credit-role{font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.5;font-weight:600;}
+.credit-name{font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:800;background:linear-gradient(135deg,#7c9fff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;transition:opacity 0.18s;}
+.credit-name:hover{opacity:0.75;}
+.credit-note{font-size:0.62rem;color:rgba(255,255,255,0.24);font-style:italic;margin-top:2px;}
+.credit-footer{text-align:center;margin-top:44px;font-size:0.68rem;color:rgba(255,255,255,0.18);letter-spacing:0.14em;text-transform:uppercase;}
+
+/* CONTACT */
+.contact-sec{position:relative;z-index:1;padding:60px 24px 80px;}
+.contact-inner{max-width:900px;margin:0 auto;background:rgba(6,10,24,0.85);border:1px solid rgba(79,110,247,0.18);border-radius:32px;padding:40px 36px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;backdrop-filter:blur(10px);}
+.contact-info-side{display:flex;flex-direction:column;gap:18px;}
+.contact-title{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:10px;}
+.contact-desc{font-size:0.85rem;color:rgba(255,255,255,0.42);line-height:1.75;margin-bottom:18px;}
+.contact-email-link{color:#7c9fff;font-weight:700;font-size:0.88rem;text-decoration:none;word-break:break-all;}
+.contact-email-link:hover{color:#a78bfa;}
+.contact-social-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;}
+.c-social-btn{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(79,110,247,0.2);display:flex;align-items:center;justify-content:center;transition:all 0.18s;text-decoration:none;color:rgba(255,255,255,0.55);}
+.c-social-btn:hover{background:rgba(79,110,247,0.15);border-color:rgba(79,110,247,0.5);color:#fff;transform:translateY(-2px);}
+.c-social-btn svg{width:18px;height:18px;fill:currentColor;}
+.cfield{margin-bottom:14px;}
+.cfield label{display:block;font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.3);margin-bottom:5px;}
+.cfield input,.cfield textarea{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:16px;color:#f0f4ff;font-size:0.86rem;font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:all 0.18s;resize:none;}
+.cfield input:focus,.cfield textarea:focus{border-color:rgba(79,110,247,0.5);background:rgba(79,110,247,0.05);box-shadow:0 0 0 3px rgba(79,110,247,0.1);}
+.cfield input::placeholder,.cfield textarea::placeholder{color:rgba(255,255,255,0.15);}
+.btn-transmit{width:100%;padding:14px;border-radius:99px;background:linear-gradient(135deg,#4f6ef7,#7c3aed);color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 6px 22px rgba(79,110,247,0.3);transition:all 0.2s;letter-spacing:0.06em;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-transmit:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(79,110,247,0.46);}
+.btn-transmit:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+/* PARTICLE */
+.particle{position:fixed;border-radius:50%;pointer-events:none;animation:floatP linear infinite;box-shadow:0 0 12px currentColor;}
+@keyframes floatP{0%{transform:translateY(100vh) rotate(0deg);opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{transform:translateY(-20vh) rotate(720deg);opacity:0;}}
+
+@media(max-width:800px){
+  .nav-links{display:none;}
+}
+@media(max-width:680px){
+  .nav{padding:16px 24px;}
+  .contact-inner{grid-template-columns:1fr;padding:28px 18px;}
+  .credits-grid{grid-template-columns:1fr 1fr;}
+  .showcase-grid{grid-template-columns:1fr;}
+  .feat-grid{grid-template-columns:1fr;}
+  .hero-stats{gap:24px;}
+  .trial-card{padding:28px 20px;}
+  .mcard{padding:32px 24px;}
+}
+@media(max-width:440px){
+  .credits-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="blob" style="width:550px;height:550px;top:-180px;left:-180px;background:radial-gradient(circle,rgba(79,110,247,0.11),transparent 70%);"></div>
+<div class="blob" style="width:450px;height:450px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(124,58,237,0.09),transparent 70%);"></div>
+<script>
+  for(var i=0;i<12;i++){
+    var p=document.createElement('div');
+    p.className='particle';
+    var s=Math.random()*3+2;
+    var isBlue=Math.random()>.5;
+    p.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(Math.random()*100)+'vw;background:'+(isBlue?'#4f6ef7':'#7c3aed')+';color:'+(isBlue?'#4f6ef7':'#7c3aed')+';opacity:'+(Math.random()*.4+.1)+';animation-duration:'+(Math.random()*25+15)+'s;animation-delay:'+(Math.random()*20)+'s;';
+    document.body.appendChild(p);
+  }
+</script>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">ASTRAEA</div>
+  <div class="nav-links">
+    <a href="#showcase" class="nlink">Inside OS</a>
+    <a href="#features" class="nlink">Systems</a>
+    <a href="#architects" class="nlink">Architects</a>
+    <a href="#contact" class="nlink">Comm-Link</a>
+  </div>
+  <div class="nav-btns">
+    <button class="nbtn out" onclick="openAuth('login')">Sign In</button>
+    <button class="nbtn pri" onclick="openAuth('signup')">Get Started →</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><span class="bdot"></span>Study OS for serious aspirants</div>
+  <h1 class="hero-h1">Your entire exam prep.<br><span>One command centre.</span></h1>
+  <p class="hero-sub">Track every hour. Crush every DPP. Analyse your weak spots. Astraea OS is the study management system built for JEE, NEET, and every exam you're targeting.</p>
+  <div class="hero-cta">
+    <button class="btn-main" onclick="openAuth('signup')">Create Free Account →</button>
+    <button class="btn-ghost" onclick="startTrial()">⚡ Try 1-Minute Demo</button>
+  </div>
+  <div class="hero-stats">
+    <div><div class="hstat-num">70+</div><div class="hstat-lbl">Days Tracked</div></div>
+    <div><div class="hstat-num">6</div><div class="hstat-lbl">Core Modules</div></div>
+    <div><div class="hstat-num">∞</div><div class="hstat-lbl">Subjects & Exams</div></div>
+    <div><div class="hstat-num">100%</div><div class="hstat-lbl">Your Data</div></div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section id="showcase" class="sec">
+  <div class="sec-lbl">Inside Astraea OS</div>
+  <h2 class="sec-h2">Everything in one place</h2>
+  <p class="sec-sub">Built from real JEE prep needs — not a generic productivity app.</p>
+  <div class="showcase-grid">
+    <!-- Home -->
+    <div class="ss-card">
+      <div class="ss-hdr"><div class="ss-dots"><div class="ss-dot" style="background:#ff5f57;"></div><div class="ss-dot" style="background:#febc2e;"></div><div class="ss-dot" style="background:#28c840;"></div></div><div class="ss-lbl">🏠 Home Dashboard</div></div>
+      <div class="ss-body">
+        <div style="font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.28);text-align:center;">Galactic Time</div>
+        <div class="mclock">10:24:36</div>
+        <div style="font-size:0.65rem;text-align:center;color:rgba(255,255,255,0.22);margin-bottom:8px;">Tuesday, June 16, 2026</div>
+        <div class="mstat-row">
+          <div class="mstat"><div class="mstat-lbl">Productive</div><div class="mstat-val" style="color:#00e5a0;">14h</div></div>
+          <div class="mstat"><div class="mstat-lbl">Unprod</div><div class="mstat-val" style="color:#ff4b70;">3h</div></div>
+          <div class="mstat"><div class="mstat-lbl">Streak</div><div class="mstat-val" style="color:#fbbf24;">🔥7</div></div>
+          <div class="mstat"><div class="mstat-lbl">Stamina</div><div class="mstat-val" style="color:#f97316;">82</div></div>
+        </div>
+        <div class="mdpp">
+          <div class="mdpp-box"><div class="mdpp-lbl" style="color:#4f6ef7;">⚡ Physics</div><div class="mdpp-val" style="color:#4f6ef7;">5🔥🔥</div></div>
+          <div class="mdpp-box"><div class="mdpp-lbl" style="color:#00e5a0;">🧪 Chem</div><div class="mdpp-val" style="color:#00e5a0;">3🔥</div></div>
+          <div class="mdpp-box"><div class="mdpp-lbl" style="color:#f472b6;">📐 Maths</div><div class="mdpp-val" style="color:#f472b6;">0</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Logger -->
+    <div class="ss-card">
+      <div class="ss-hdr"><div class="ss-dots"><div class="ss-dot" style="background:#ff5f57;"></div><div class="ss-dot" style="background:#febc2e;"></div><div class="ss-dot" style="background:#28c840;"></div></div><div class="ss-lbl">⏱ Activity Logger</div></div>
+      <div class="ss-body">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.85rem;font-weight:700;text-align:center;background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;">70d 21:30:58</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <div style="flex:1;padding:6px;border-radius:12px;background:rgba(79,110,247,0.25);border:1px solid rgba(79,110,247,0.3);font-size:0.62rem;font-weight:700;text-align:center;">⏸ PAUSE</div>
+          <div style="flex:1;padding:6px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);font-size:0.62rem;font-weight:700;text-align:center;">⚑ LOG</div>
+          <div style="flex:1;padding:6px;border-radius:12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.28);font-size:0.62rem;font-weight:700;text-align:center;color:#fbbf24;">⏳ PAST</div>
+        </div>
+        <div class="mlog-row"><div class="mlog-name">Chem Lec 11 — Spectrum</div><div class="mbadge" style="background:rgba(0,229,160,0.15);color:#00e5a0;">PROD</div><div class="mlog-dur">02:17</div></div>
+        <div class="mlog-row"><div class="mlog-name">Sleep</div><div class="mbadge" style="background:rgba(100,116,255,0.15);color:#818cf8;">SLEEP</div><div class="mlog-dur">10:30</div></div>
+        <div class="mlog-row"><div class="mlog-name" style="display:flex;align-items:center;gap:5px;">Timepass <span style="font-size:0.5rem;padding:1px 5px;border-radius:99px;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">⏳ PAST</span></div><div class="mbadge" style="background:rgba(255,75,112,0.15);color:#ff4b70;">UNPROD</div><div class="mlog-dur">01:30</div></div>
+      </div>
+    </div>
+    <!-- Analytics -->
+    <div class="ss-card">
+      <div class="ss-hdr"><div class="ss-dots"><div class="ss-dot" style="background:#ff5f57;"></div><div class="ss-dot" style="background:#febc2e;"></div><div class="ss-dot" style="background:#28c840;"></div></div><div class="ss-lbl">📊 Day Summary</div></div>
+      <div class="ss-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+          <div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:12px;"><div style="font-size:0.5rem;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;">⚡ Physics</div><div style="font-size:1rem;font-weight:700;color:#4f6ef7;">25h 36m</div></div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:12px;"><div style="font-size:0.5rem;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;">🧪 Chemistry</div><div style="font-size:1rem;font-weight:700;color:#00e5a0;">21h 15m</div></div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:12px;"><div style="font-size:0.5rem;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;">📐 Maths</div><div style="font-size:1rem;font-weight:700;color:#f472b6;">23h 17m</div></div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:16px;padding:12px;"><div style="font-size:0.5rem;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;">📝 DPP</div><div style="font-size:1rem;font-weight:700;color:#fbbf24;">6h 12m</div></div>
+        </div>
+        <div class="mbars">
+          <div class="mbar" style="height:42%;background:rgba(79,110,247,0.5);"></div>
+          <div class="mbar" style="height:68%;background:rgba(79,110,247,0.6);"></div>
+          <div class="mbar" style="height:52%;background:rgba(79,110,247,0.5);"></div>
+          <div class="mbar" style="height:82%;background:rgba(79,110,247,0.72);"></div>
+          <div class="mbar" style="height:57%;background:rgba(79,110,247,0.5);"></div>
+          <div class="mbar" style="height:92%;background:rgba(79,110,247,0.85);"></div>
+          <div class="mbar" style="height:72%;background:rgba(79,110,247,0.65);"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Nexus -->
+    <div class="ss-card">
+      <div class="ss-hdr"><div class="ss-dots"><div class="ss-dot" style="background:#ff5f57;"></div><div class="ss-dot" style="background:#febc2e;"></div><div class="ss-dot" style="background:#28c840;"></div></div><div class="ss-lbl">📋 Nexus Control</div></div>
+      <div class="ss-body">
+        <div style="text-align:center;margin-bottom:10px;font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:0.1em;">WEEK 25</div>
+        <div style="display:flex;gap:5px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;">
+          <div style="padding:4px 9px;border-radius:99px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.35);text-align:center;">MON<br><span style="color:#00e5a0;">4/6</span></div>
+          <div style="padding:4px 9px;border-radius:99px;background:linear-gradient(135deg,rgba(79,110,247,0.38),rgba(124,58,237,0.28));border:1px solid rgba(79,110,247,0.45);font-size:0.58rem;font-weight:700;text-align:center;">TUE<br>0/3</div>
+          <div style="padding:4px 9px;border-radius:99px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.35);text-align:center;">WED</div>
+          <div style="padding:4px 9px;border-radius:99px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.35);text-align:center;">THU</div>
+        </div>
+        <div class="mtask"><div class="mcircle"></div><div style="flex:1;"><div class="mtask-name">Maths Revision</div><div class="mtask-sub">Logarithm</div></div><div style="font-size:0.58rem;padding:2px 7px;border-radius:99px;background:rgba(251,191,36,0.14);color:#fbbf24;font-weight:700;">MED</div><div style="font-size:0.6rem;color:rgba(255,255,255,0.28);margin-left:6px;">0m/60m</div></div>
+        <div class="mtask"><div class="mcircle"></div><div style="flex:1;"><div class="mtask-name">Maths DPP's</div><div class="mtask-sub">DPP 15–20</div></div><div style="font-size:0.58rem;padding:2px 7px;border-radius:99px;background:rgba(251,191,36,0.14);color:#fbbf24;font-weight:700;">MED</div><div style="font-size:0.6rem;color:rgba(255,255,255,0.28);margin-left:6px;">0m/90m</div></div>
+        <div class="mtask"><div class="mcircle" style="border-color:rgba(0,229,160,0.35);"></div><div class="mtask-name">Chem Structure of Atom</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="sec" style="padding-top:20px;">
+  <div class="sec-lbl">What's inside</div>
+  <h2 class="sec-h2">Every tool you need</h2>
+  <p class="sec-sub">From raw hour tracking to smart weekly reports — all synced to cloud.</p>
+  <div class="feat-grid">
+    <div class="feat"><div class="feat-icon" style="background:rgba(251,191,36,0.15);color:#fbbf24;">⏱</div><div class="feat-title">Activity Logger</div><div class="feat-desc">Real-time stopwatch logs every hour as productive, unproductive, sleep, or health. Missed a session? Log Past fills it in retroactively.</div><span class="feat-pill" style="background:rgba(251,191,36,0.1);color:#fbbf24;">70+ days tracked</span></div>
+    <div class="feat"><div class="feat-icon" style="background:rgba(79,110,247,0.15);color:#7c9fff;">🎯</div><div class="feat-title">Deep Focus Timer</div><div class="feat-desc">Per-chapter focus tracking with Pomodoro-style sessions. Links directly to chapter progress and auto-suggests log entries when done.</div><span class="feat-pill" style="background:rgba(79,110,247,0.1);color:#7c9fff;">Chapter-linked</span></div>
+    <div class="feat"><div class="feat-icon" style="background:rgba(0,229,160,0.15);color:#00e5a0;">📋</div><div class="feat-title">Nexus Control</div><div class="feat-desc">Weekly task planner with subtasks, priority levels, subject tags, time estimates, and carry-forward. Planned vs actual time per task.</div><span class="feat-pill" style="background:rgba(0,229,160,0.1);color:#00e5a0;">Planned vs actual</span></div>
+    <div class="feat"><div class="feat-icon" style="background:rgba(244,114,182,0.15);color:#f472b6;">🔥</div><div class="feat-title">DPP Streak Tracker</div><div class="feat-desc">Separate fire streak counters for Physics, Chemistry, and Maths DPPs — the most skipped habit, now the most visible on your dashboard.</div><span class="feat-pill" style="background:rgba(244,114,182,0.1);color:#f472b6;">Per-subject streaks</span></div>
+    <div class="feat"><div class="feat-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa;">📊</div><div class="feat-title">Day Summary & Analytics</div><div class="feat-desc">Subject split charts, study type breakdowns, best hour of day, weekly report cards with your weakest subject and one thing to fix.</div><span class="feat-pill" style="background:rgba(124,58,237,0.1);color:#a78bfa;">Smart insights</span></div>
+    <div class="feat"><div class="feat-icon" style="background:rgba(249,115,22,0.15);color:#fb923c;">🌙</div><div class="feat-title">Daily Review Prompt</div><div class="feat-desc">After 8 PM a prompt asks what went wrong and what to fix tomorrow. Reviews feed into weekly report cards automatically.</div><span class="feat-pill" style="background:rgba(249,115,22,0.1);color:#fb923c;">End-of-day habit</span></div>
+  </div>
+</section>
+
+<!-- TRIAL CTA -->
+<section class="trial-sec">
+  <div class="trial-card">
+    <div class="t-ring">
+      <svg width="110" height="110"><circle cx="55" cy="55" r="48" fill="none" stroke="rgba(79,110,247,0.14)" stroke-width="6"/><circle id="t-ring" cx="55" cy="55" r="48" fill="none" stroke="url(#tg)" stroke-width="6" stroke-dasharray="301.6" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 55 55)"/><defs><linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f6ef7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+      <div class="t-time" id="t-hero-time">1:00</div>
+    </div>
+    <div class="trial-title">Try it — no account needed</div>
+    <div class="trial-desc">1 minute of full access. Your data won't be saved, but you'll see exactly what Astraea OS can do.</div>
+    <button class="btn-main" style="width:100%;margin-bottom:11px;" onclick="startTrial()">⚡ Start 1-Minute Trial</button>
+    <button class="btn-ghost" style="width:100%;" onclick="openAuth('signup')">Create Free Account Instead →</button>
+  </div>
+</section>
+
+<!-- ═══════════════ CREDITS ═══════════════ -->
+<section id="architects" class="credits-sec">
+  <div class="section-header">🚀 SYSTEM CREDITS</div>
+  <div class="hero-clock">ASTRAEA OS</div>
+
+  <div class="credits-subtitle">The Architect Core</div>
+  <div class="credits-grid">
+    <div class="credit-card">
+      <img src="michtobhagwat.jpg" alt="@michtobhagwat_" class="credit-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=michtobhagwat&backgroundColor=transparent'">
+      <div class="credit-role">🧠 Supreme Overlord, CEO, Coordination Dept, HTML Writer & Official Stress Absorber</div>
+      <a href="https://www.instagram.com/michtobhagwat_/" target="_blank" class="credit-name">@michtobhagwat_</a>
+    </div>
+    <div class="credit-card">
+      <img src="animexb.jpg" alt="@animexb_" class="credit-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=animexb&backgroundColor=transparent'">
+      <div class="credit-role">🧩 Idea Architect, Structure Designer, Strategic Mastermind</div>
+      <a href="https://www.instagram.com/animexb_/" target="_blank" class="credit-name">@animexb_</a>
+      <div class="credit-note">(literally me but in another personality)</div>
+    </div>
+    <div class="credit-card">
+      <img src="https://yt3.googleusercontent.com/c8AsV5t-NS6M732o5_Upis__TERHlaY0tpnyqpIPqCjVdhMxP-872mwA-LI9A4LV7uH97AKNMw=s120-c-k-c0x00ffffff-no-rj" alt="@207edx" class="credit-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=207edx&backgroundColor=transparent'">
+      <div class="credit-role">🛠️ Bug Hunter, Glitch Assassin, Emergency Fix Division</div>
+      <a href="https://www.youtube.com/@207EDX" target="_blank" class="credit-name">@207edx</a>
+      <div class="credit-note">(yes… also me. third personality unlocked)</div>
+    </div>
+    <div class="credit-card">
+      <img src="mtbeditz.jpg" alt="@mtbeditz_07" class="credit-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=mtbeditz&backgroundColor=transparent'">
+      <div class="credit-role">🎨 Visual Wizard, UI Glow Engineer, Pixel Perfectionist</div>
+      <a href="https://www.instagram.com/mtbeditz_07/" target="_blank" class="credit-name">@mtbeditz_07</a>
+      <div class="credit-note">(still me but aesthetic mode activated)</div>
+    </div>
+  </div>
+  <div class="credit-footer">© 2026 Astraea OS by bhagwat</div>
+</section>
+
+<!-- ═══════════════ TRANSMISSION ARRAY (CONTACT) ═══════════════ -->
+<section id="contact" class="contact-sec">
+  <div class="sec-lbl">Transmission Array</div>
+  <h2 class="sec-h2">Establish Contact</h2>
+  <p class="sec-sub">Have ideas to improve Astraea OS? Or just want to connect with the Architect? Use the form or our secure channels.</p>
+
+  <div class="contact-inner">
+    <!-- Form side -->
+    <div class="contact-form-side">
+      <div id="tx-msg" class="msg"></div>
+      <form id="tx-form" onsubmit="sendTransmission(event)">
+        <div class="cfield">
+          <label>Your Callsign (Name)</label>
+          <input type="text" name="name" placeholder="Your Callsign (Name)" required autocomplete="name">
+        </div>
+        <div class="cfield">
+          <label>Comm-Link (Email)</label>
+          <input type="email" name="email" placeholder="Comm-Link (Email)" required autocomplete="email">
+        </div>
+        <div class="cfield">
+          <label>Transmission</label>
+          <textarea name="message" rows="5" placeholder="Input suggestion, bug report, or transmission..." required></textarea>
+        </div>
+        <button class="btn-transmit" type="submit" id="btn-tx">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          SEND TRANSMISSION
+        </button>
+      </form>
+    </div>
+
+    <!-- Info side -->
+    <div class="contact-info-side">
+      <div>
+        <div class="contact-title">Establish Contact</div>
+        <div class="contact-desc">Have ideas to improve Astraea OS? Or just want to connect with the Architect? Use the form or our secure channels.</div>
+        <a href="mailto:Astrocore29@gmail.com" class="contact-email-link">Astrocore29@gmail.com</a>
+      </div>
+      <div class="contact-social-row">
+        <!-- X / Twitter -->
+        <a href="https://x.com/michtobhagwat" target="_blank" class="c-social-btn" title="X / Twitter">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.629L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+        </a>
+        <!-- Instagram -->
+        <a href="https://www.instagram.com/michtobhagwat_/" target="_blank" class="c-social-btn" title="Instagram">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+        <!-- GitHub -->
+        <a href="https://github.com/207edx" target="_blank" class="c-social-btn" title="GitHub">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        </a>
+        <!-- Discord -->
+        <a href="https://discord.gg/UB4wY6atHx" target="_blank" class="c-social-btn" title="Discord">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.112 18.102.13 18.116a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+async function sendTransmission(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-tx');
+  const msgEl = document.getElementById('tx-msg');
+  const form = document.getElementById('tx-form');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> TRANSMITTING…';
+  msgEl.className = 'msg'; msgEl.style.display='none';
+  try {
+    const fd = new FormData(form);
+    const res = await fetch('https://formspree.io/f/xjgqyope', {
+      method: 'POST', body: fd, headers: {Accept: 'application/json'}
+    });
+    if (res.ok) {
+      msgEl.className = 'msg success show';
+      msgEl.innerHTML = '<span>✓</span><span>Transmission received! We\'ll be in touch.</span>';
+      form.reset();
+    } else {
+      throw new Error('Server error');
+    }
+  } catch(err) {
+    msgEl.className = 'msg error show';
+    msgEl.innerHTML = '<span>⚠</span><span>Transmission failed. Try emailing us directly.</span>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> SEND TRANSMISSION';
+}
+</script>
+
+<footer class="footer">ASTRAEA OS · Universal Study Platform · <span>v2.0</span> · Built for JEE 2028</footer>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="auth-modal">
+  <div class="mcard">
+    <button class="mclose" onclick="closeAuth()">✕</button>
+    <div class="brand">
+      <div class="brand-wrap"><div class="borbit"><div class="borbit-in"></div></div><div class="brand-name">ASTRAEA</div></div>
+      <div class="brand-ver">Restricted Access Portal</div>
+    </div>
+    
+    <div class="atabs" id="auth-tabs">
+      <div class="atab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="atab" id="tab-signup" onclick="switchTab('signup')">Create Account</div>
+    </div>
+    
+    <div id="msg-box" class="msg"></div>
+    
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="field"><label>Command Comm-Link</label><input type="email" id="l-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="field"><label>Security Clearance (Password)</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-pri" id="btn-login" onclick="doLogin()">Authorize Access →</button>
+      <div class="divider">or</div>
+      <button class="btn-goog" onclick="doGoogle()"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.4 30.2 0 24 0 14.7 0 6.7 5.5 2.9 13.5l7.8 6.1C12.5 13.2 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.9-2.2 5.4-4.7 7l7.3 5.7c4.3-4 6.8-9.9 6.8-16.7z"/><path fill="#FBBC05" d="M10.7 28.4A14.5 14.5 0 0 1 9.5 24c0-1.5.3-3 .7-4.4l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l7.8-6.1-.1-.3z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.3-5.7c-2 1.4-4.6 2.2-7.9 2.2-6.2 0-11.5-3.7-13.3-9.1l-7.8 6.1C6.7 42.5 14.7 48 24 48z"/></svg>Continue with Google</button>
+      <span class="alink" onclick="switchTab('reset')">Lost your security clearance? Reset Password →</span>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="form-signup" style="display:none;">
+      <div class="field"><label>Display Name</label><input type="text" id="s-name" placeholder="Your name or callsign" autocomplete="name"></div>
+      <div class="field"><label>Comm-Link (Email)</label><input type="email" id="s-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Security Clearance (Password)</label><input type="password" id="s-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doSignup()"></div>
+      <button class="btn-pri" id="btn-signup" onclick="doSignup()">Establish Account →</button>
+      <div class="divider">or</div>
+      <button class="btn-goog" onclick="doGoogle()"><svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.4 30.2 0 24 0 14.7 0 6.7 5.5 2.9 13.5l7.8 6.1C12.5 13.2 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.9-2.2 5.4-4.7 7l7.3 5.7c4.3-4 6.8-9.9 6.8-16.7z"/><path fill="#FBBC05" d="M10.7 28.4A14.5 14.5 0 0 1 9.5 24c0-1.5.3-3 .7-4.4l-7.8-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l7.8-6.1-.1-.3z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.3-5.7c-2 1.4-4.6 2.2-7.9 2.2-6.2 0-11.5-3.7-13.3-9.1l-7.8 6.1C6.7 42.5 14.7 48 24 48z"/></svg>Continue with Google</button>
+      <span class="alink" onclick="switchTab('login')">Already have an account? Sign in →</span>
+    </div>
+
+    <!-- Password Reset Form -->
+    <div id="form-reset" style="display:none;">
+      <div class="field"><label>Registered Comm-Link</label><input type="email" id="r-email" placeholder="you@example.com"></div>
+      <button class="btn-pri" id="btn-reset" onclick="doReset()">Transmit Reset Protocol</button>
+      <span class="alink" onclick="switchTab('login')">← Return to Login Sequence</span>
+    </div>
+  </div>
+</div>
+
+<!-- TRIAL EXPIRED -->
+<div class="t-expired" id="t-expired">
+  <div class="te-icon">⏰</div>
+  <div class="te-title">Trial Ended</div>
+  <div class="te-sub">Your 1-minute demo is up. Log in to your command centre to save your data and sync to cloud.</div>
+  <button class="te-btn" onclick="openAuth('signup')">Create Free Account →</button>
+  <button class="te-btn" style="background:rgba(255,255,255,0.07);box-shadow:none;margin-top:8px;" onclick="openAuth('login')">Sign In →</button>
+  <div class="te-skip" onclick="document.getElementById('t-expired').classList.remove('show')">← Back to landing page</div>
+</div>
+
+<script>
+// Modal
+window.openAuth=function(tab){document.getElementById('auth-modal').classList.add('show');switchTab(tab||'login');};
+window.closeAuth=function(){document.getElementById('auth-modal').classList.remove('show');};
+document.getElementById('auth-modal').addEventListener('click',function(e){if(e.target===this)closeAuth();});
+window.switchTab=function(tab){
+  hideMsg();
+  const tabs = document.getElementById('auth-tabs');
+  document.getElementById('form-login').style.display=tab==='login'?'':'none';
+  document.getElementById('form-signup').style.display=tab==='signup'?'':'none';
+  document.getElementById('form-reset').style.display=tab==='reset'?'':'none';
+  
+  if (tab === 'reset') {
+    tabs.style.display = 'none';
+  } else {
+    tabs.style.display = 'flex';
+    document.getElementById('tab-login').className='atab'+(tab==='login'?' active':'');
+    document.getElementById('tab-signup').className='atab'+(tab==='signup'?' active':'');
+  }
+};
+function showMsg(t,tp){var e=document.getElementById('msg-box');e.innerHTML='<span>'+(tp==='error'?'⚠':'✓')+'</span><span>'+t+'</span>';e.className='msg '+tp+' show';}
+function hideMsg(){document.getElementById('msg-box').className='msg';}
+function setBtn(id,h){var b=document.getElementById(id);if(b)b.innerHTML=h;}
+function disableBtn(id,y){var b=document.getElementById(id);if(b)b.disabled=y;}
+
+// Trial countdown on ring (cosmetic — actual trial runs in app.html)
+var _tSecs=60,_tInt=null;
+function updateTrialRing(){
+  var pct=_tSecs/60;
+  var circ=301.6;
+  var offset=circ*(1-pct);
+  var ring=document.getElementById('t-ring');
+  var ttime=document.getElementById('t-hero-time');
+  if(ring) ring.style.strokeDashoffset=offset;
+  if(ttime) ttime.textContent='0:'+((_tSecs<10?'0':'')+_tSecs);
+}
+window.startTrial=function(){
+  if(_tInt) return;
+  sessionStorage.setItem('astraea_trial','1');
+  sessionStorage.setItem('astraea_trial_expires',Date.now()+61000);
+  window.location.href='app.html?trial=1';
+};
+setInterval(function(){
+  if(_tSecs>0){_tSecs--;updateTrialRing();}
+  else{_tSecs=60;updateTrialRing();}
+},1000);
+</script>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,GoogleAuthProvider,signInWithPopup,updateProfile,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const cfg={apiKey:"AIzaSyAUXVcxZj-ATNnZpAuvjv17PVv-9skGUGE",authDomain:"astra-50147.firebaseapp.com",projectId:"astra-50147",storageBucket:"astra-50147.firebasestorage.app",messagingSenderId:"407790127495",appId:"1:407790127495:web:835d849f6b1338f8e1eb22"};
+const app=initializeApp(cfg);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const gp=new GoogleAuthProvider();
+
+function goApp(u){sessionStorage.setItem('astraea2_uid',u.uid);sessionStorage.setItem('astraea2_name',u.displayName||u.email.split('@')[0]);sessionStorage.setItem('astraea2_email',u.email||'');sessionStorage.setItem('astraea2_photo',u.photoURL||'');sessionStorage.removeItem('astraea_trial');window.location.href='app.html';}
+async function saveId(u,n){try{const d=doc(db,'users2',u.uid,'appdata','main');const s=await getDoc(d);if(!s.exists())await setDoc(d,{identity:{callsign:n||u.displayName||u.email.split('@')[0],email:u.email||'',avatar:u.photoURL||'',createdAt:new Date().toISOString()},updatedAt:Date.now()},{merge:true});}catch(e){console.warn(e);}}
+
+onAuthStateChanged(auth,u=>{if(u)goApp(u);});
+
+window.doLogin=async function(){
+  hideMsg();
+  const em=document.getElementById('l-email').value.trim(),ps=document.getElementById('l-pass').value;
+  if(!em||!ps){showMsg('Input credentials.','error');return;}
+  disableBtn('btn-login',true);setBtn('btn-login','<span class="spinner"></span> Authenticating…');
+  try{await signInWithEmailAndPassword(auth,em,ps);}
+  catch(e){disableBtn('btn-login',false);setBtn('btn-login','Authorize Access →');showMsg('Access Denied.','error');}
+};
+
+window.doSignup=async function(){
+  hideMsg();
+  const nm=document.getElementById('s-name').value.trim(),em=document.getElementById('s-email').value.trim(),ps=document.getElementById('s-pass').value;
+  if(!nm||!em||!ps){showMsg('Fill in all fields.','error');return;}
+  if(ps.length<6){showMsg('Password min 6 characters.','error');return;}
+  disableBtn('btn-signup',true);setBtn('btn-signup','<span class="spinner"></span> Establishing…');
+  try{const c=await createUserWithEmailAndPassword(auth,em,ps);await updateProfile(c.user,{displayName:nm});await saveId(c.user,nm);}
+  catch(e){disableBtn('btn-signup',false);setBtn('btn-signup','Establish Account →');showMsg(e.message,'error');}
+};
+
+window.doGoogle=async function(){
+  hideMsg();
+  try{const c=await signInWithPopup(auth,gp);await saveId(c.user,c.user.displayName);}
+  catch(e){if(e.code!=='auth/popup-closed-by-user')showMsg(e.message,'error');}
+};
+
+window.doReset=async function(){
+  hideMsg();
+  const em=document.getElementById('r-email').value.trim();
+  if(!em){showMsg('Input comm-link (email).','error');return;}
+  disableBtn('btn-reset',true);setBtn('btn-reset','<span class="spinner"></span> Transmitting…');
+  try{
+    await sendPasswordResetEmail(auth, em);
+    showMsg('Protocol sent to comm-link.','success');
+    setBtn('btn-reset','Transmit Reset Protocol');
+    disableBtn('btn-reset',false);
+  }catch(e){
+    disableBtn('btn-reset',false);setBtn('btn-reset','Transmit Reset Protocol');
+    showMsg(e.message,'error');
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// =============================================================
+// AstraeaOS Firestore Security Rules
+//
+// Collections actually used by the client (confirmed by reading
+// app.js — there are only two):
+//   users2/{uid}/appdata/{main|diary|nexus|tracker|alarms|chapters}
+//   users2/{uid}/astratest/{testId}
+//   leaderboard2/{uid}   (opt-in public leaderboard entry)
+//
+// Deploy with:  firebase deploy --only firestore:rules
+// (requires firebase-tools and `firebase use <project>` set to
+// astra-50147, or whatever project ID you're on).
+// =============================================================
+
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function isOwner(uid) {
+  return isSignedIn() && request.auth.uid == uid;
+}
+
+function isAdmin() {
+  // Matches window.ADMIN_EMAIL in app.js. Firebase Auth puts `email`
+  // on the ID token automatically for password and Google sign-in,
+  // so this is enforced here — server-side, at the database — not
+  // just hidden behind a client-side `if`, closing the "any signed-in
+  // user can call the same SDK function from devtools" hole that
+  // existed with a JS-only admin check.
+  return isSignedIn() && request.auth.token.email == '207edx@gmail.com';
+}
+
+// Only known, expected fields are accepted on a leaderboard write, and
+// a normal user can never set `hidden` (only the moderator/admin can).
+// This does NOT stop a user from lying about their own streak/stamina/
+// focus minutes (those are self-reported client-computed numbers with
+// no server-side computation to check them against) — see the
+// "Remaining warnings" section of the project README for that
+// trust-boundary limitation and what closing it fully would require.
+function validLeaderboardWrite() {
+  let d = request.resource.data;
+  return d.keys().hasOnly(['username','avatarUrl','email','streak','stamina','totalMins','prodMins','unprodMins','exam','updatedAt','hidden'])
+    && (!('hidden' in d) || isAdmin())
+    && d.username is string && d.username.size() <= 60
+    && (!('avatarUrl' in d) || (d.avatarUrl is string && d.avatarUrl.size() <= 500));
+}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Private per-user application data. Only the owning account may
+    // ever read or write it — not even the admin account gets a
+    // carve-out here, matching the app's own stated intent that admin
+    // moderation "never touches a user's private appdata".
+    match /users2/{uid}/{document=**} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Public, opt-in leaderboard entries.
+    match /leaderboard2/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if (isOwner(uid) && validLeaderboardWrite()) || isAdmin();
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Deny everything else by default (no other collections exist in
+    // the app today; this stops a stray typo'd collection name from
+    // accidentally becoming world-writable).
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
