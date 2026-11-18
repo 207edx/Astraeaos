@@ -147,7 +147,7 @@
     function setOpen(open) {
       panel.classList.toggle('open', open);
       document.body.classList.toggle('nav-more-open', open);
-      toggle.classList.toggle('active', open || toggle.classList.contains('active'));
+      toggle.classList.toggle('active', open);
       toggle.setAttribute('aria-expanded', String(open));
     }
     toggle.addEventListener('click', function (event) {
