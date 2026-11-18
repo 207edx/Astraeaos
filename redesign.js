@@ -85,6 +85,16 @@
     const nav = $('.astraea-shell > nav');
     if (!nav || $('#nav-more-toggle')) return;
 
+    const primaryCaptions = { home: 'Home', log: 'Activity', focus: 'Focus' };
+    Object.keys(primaryCaptions).forEach(function (tab) {
+      const link = originalNavLink(tab);
+      if (!link || $('.nav-caption', link)) return;
+      const label = document.createElement('span');
+      label.className = 'nav-caption';
+      label.textContent = primaryCaptions[tab];
+      link.appendChild(label);
+    });
+
     const toggle = document.createElement('button');
     toggle.type = 'button';
     toggle.id = 'nav-more-toggle';
