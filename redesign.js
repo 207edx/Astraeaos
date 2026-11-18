@@ -49,6 +49,19 @@
 
     const summaryTitle = $('#summary .section-header');
     if (summaryTitle) summaryTitle.textContent = 'Task & Focus Report';
+    [
+      '#sum-allocation-layout',
+      '#sum-day-bar-chart',
+      '#sum2-activity-log',
+      '#diary-summary-card'
+    ].forEach(function (selector) {
+      const target = $(selector);
+      const card = target && (target.closest('.summary-stat-card') || target);
+      if (card) {
+        card.hidden = true;
+        card.setAttribute('aria-hidden', 'true');
+      }
+    });
     const reportJumps = $('#summary-jumps');
     if (reportJumps) reportJumps.setAttribute('aria-label', 'Choose report period');
 
